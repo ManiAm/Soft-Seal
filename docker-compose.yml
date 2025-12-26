@@ -1,0 +1,26 @@
+services:
+
+  redis_db:
+    image: redis:7.4
+    container_name: redis_db
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    networks:
+      - soft_seal_network
+
+  soft_seal:
+    build: .
+    container_name: soft_seal
+    hostname: soft_seal
+    depends_on:
+      redis_db:
+        condition: service_started
+    networks:
+      - soft_seal_network
+    volumes:
+      - /etc/machine-id:/etc/machine-id:ro
+
+networks:
+  soft_seal_network:
+    driver: bridge
