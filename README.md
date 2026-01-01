@@ -106,7 +106,7 @@ Next, we move away from storing the encryption key at all. Instead, we let the a
     secret     →  Encrypt with DerivedKey  →  EncryptedBlob
     Stored in DB: EncryptedBlob
 
-At runtime the program asks the OS for the Machine ID. It deterministically derives the same encryption key again, and decrypts the stored blob. Now we get an important property:
+At runtime the program asks the OS for the Machine ID. It derives the same encryption key again, and decrypts the stored blob. Now we get an important property:
 
 > The secret can be decrypted only on that machine.
 
@@ -120,14 +120,13 @@ In this refinement, we introduce `salt`. It is a random value generated once and
     secret              →  Encrypt with DerivedKey  →  EncryptedBlob
     Stored in DB: { Salt, EncryptedBlob }
 
-The program never stores the encryption key. Instead, it reconstructs it deterministically at startup:
+The program can reconstruct the encryption key using the following steps:
 
 - Read the Machine ID from the operating system.
 - Read the Salt from storage.
-- Run both through the key-derivation function.
-- Use the resulting key to decrypt the encrypted blob.
+- Run both through the key-derivation function to get the encryption key
 
-Because the same inputs always produce the same output, the application can reliably regenerate the key — while an attacker who only has the database cannot.
+We never store the encryption key. Instead, we reconstructs it deterministically every time. Because the same inputs always produce the same output, the application can reliably regenerate the key while an attacker who only has the database cannot.
 
 Note that salt is not "optional hardening". It prevents an entire class of attacks. Imagine thousands of systems using the same technique without salt. Many machines, particularly cloud images and default installations, often share identical or predictable identifiers:
 
